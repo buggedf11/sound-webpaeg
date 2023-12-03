@@ -4,26 +4,48 @@
   <title>Sound Webpage</title>
   <style>
     /* Add any custom styles here */
+    #visualizer {
+      width: 300px;
+      height: 200px;
+      border: 1px solid black;
+      margin-left: 20px;
+    }
   </style>
 </head>
 <body>
   <h1>Sound Webpage</h1>
   
   <button id="playButton">Play Sound</button>
+  <button id="stopButton">Stop Sound</button>
   
   <h2>Volume</h2>
   <input type="range" id="volumeSlider" min="0" max="100" value="50">
+  <p>Current Volume: <span id="currentVolume">50</span></p>
   
   <h2>Pitch</h2>
-  <input type="range" id="pitchSlider" min="0" max="100" value="50">
+  <input type="range" id="pitchSlider" min="0" max="350" value="50">
+  <p>Current Pitch: <span id="currentPitch">50</span></p>
+  
+  <!-- Add an element for displaying the current frequency -->
+  <p>Current Frequency: <span id="currentFrequency">0</span> Hz</p>
   
   <!-- Add more sliders for other effects if needed -->
+  
+  <div id="visualizer"></div>
   
   <script>
     // Add your JavaScript code here
     const playButton = document.getElementById('playButton');
+    const stopButton = document.getElementById('stopButton');
     const volumeSlider = document.getElementById('volumeSlider');
     const pitchSlider = document.getElementById('pitchSlider');
+    const visualizer = document.getElementById('visualizer');
+    
+    let oscillator;
+    let gainNode;
+    let analyser;
+    let dataArray;
+    let canvasCtx;
     
     // Function to play the sound
     function playSound() {
@@ -34,16 +56,16 @@
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       
       // Create an oscillator node
-      const oscillator = audioContext.createOscillator();
+      oscillator = audioContext.createOscillator();
       
       // Set the oscillator type to "sine" for a constant buzz
       oscillator.type = 'sine';
       
       // Map the pitch slider value from [0, 100] to [100, 1000]
-      oscillator.frequency.value = mapRange(pitch, 0, 100, 100, 1000);
+      oscillator.frequency.value = mapRange(pitch, 0, 350, 100, 1000);
       
       // Create a gain node to control the volume
-      const gainNode = audioContext.createGain();
+      gainNode = audioContext.createGain();
       
       // Set the gain value based on the volume slider value
       gainNode.gain.value = volume / 100;
@@ -54,31 +76,87 @@
       // Connect the gain node to the audio output
       gainNode.connect(audioContext.destination);
       
+      // Create an analyser node to visualize the sound wave
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      const bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
+      
+      // Connect the analyser node to the gain node
+      gainNode.connect(analyser);
+      
       // Start the oscillator
       oscillator.start();
       
-      // Stop the oscillator after a certain duration (e.g., 3 seconds)
-      setTimeout(() => {
+      // Start the visualization
+      visualize();
+    }
+    
+    // Function to stop the sound
+    function stopSound() {
+      if (oscillator) {
         oscillator.stop();
-      }, 3000);
+        oscillator.disconnect();
+      }
     }
     
     // Function to update the volume
     function updateVolume() {
       const volume = volumeSlider.value;
-      // Add code to update the volume of the sound
-      gainNode.gain.value = volume / 100;
+      document.getElementById('currentVolume').innerText = volume;
+      // Rest of the code...
+      if (gainNode) {
+        gainNode.gain.value = volume / 100;
+      }
     }
     
     // Function to update the pitch
     function updatePitch() {
       const pitch = pitchSlider.value;
-      // Add code to update the pitch of the sound
-      oscillator.frequency.value = mapRange(pitch, 0, 100, 100, 1000);
+      const frequency = mapRange(pitch, 0, 100, 100, 1000);
+      document.getElementById('currentFrequency').innerText = frequency.toFixed(2);
+      // Rest of the code...
+      if (oscillator) {
+        oscillator.frequency.value = mapRange(pitch, 0, 100, 100, 1000);
+      }
+    }
+    
+    // Function to visualize the sound wave
+    function visualize() {
+      canvasCtx.clearRect(0, 0, visualizer.width, visualizer.height);
+      
+      analyser.getByteTimeDomainData(dataArray);
+      
+      canvasCtx.lineWidth = 2;
+      canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+      
+      canvasCtx.beginPath();
+      
+      const sliceWidth = visualizer.width * 1.0 / dataArray.length;
+      let x = 0;
+      
+      for(let i = 0; i < dataArray.length; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = v * visualizer.height / 2;
+        
+        if(i === 0) {
+          canvasCtx.moveTo(x, y);
+        } else {
+          canvasCtx.lineTo(x, y);
+        }
+        
+        x += sliceWidth;
+      }
+      
+      canvasCtx.lineTo(visualizer.width, visualizer.height / 2);
+      canvasCtx.stroke();
+      
+      requestAnimationFrame(visualize);
     }
     
     // Add event listeners to handle button click and slider changes
     playButton.addEventListener('click', playSound);
+    stopButton.addEventListener('click', stopSound);
     volumeSlider.addEventListener('input', updateVolume);
     pitchSlider.addEventListener('input', updatePitch);
     
@@ -86,6 +164,11 @@
     function mapRange(value, inMin, inMax, outMin, outMax) {
       return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
     }
+    
+    // Initialize the visualizer canvas
+    canvasCtx = visualizer.getContext('2d');
+    visualizer.width = visualizer.clientWidth;
+    visualizer.height = visualizer.clientHeight;
   </script>
 </body>
 </html>
