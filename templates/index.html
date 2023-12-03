@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sound Webpage</title>
+  <style>
+    /* Add any custom styles here */
+  </style>
+</head>
+<body>
+  <h1>Sound Webpage</h1>
+  
+  <button id="playButton">Play Sound</button>
+  
+  <h2>Volume</h2>
+  <input type="range" id="volumeSlider" min="0" max="100" value="50">
+  
+  <h2>Pitch</h2>
+  <input type="range" id="pitchSlider" min="0" max="100" value="50">
+  
+  <!-- Add more sliders for other effects if needed -->
+  
+  <script>
+    // Add your JavaScript code here
+    const playButton = document.getElementById('playButton');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const pitchSlider = document.getElementById('pitchSlider');
+    
+    // Function to play the sound
+    function playSound() {
+      const volume = volumeSlider.value;
+      const pitch = pitchSlider.value;
+      
+      // Create an AudioContext
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Create an oscillator node
+      const oscillator = audioContext.createOscillator();
+      
+      // Set the oscillator type to "sine" for a constant buzz
+      oscillator.type = 'sine';
+      
+      // Map the pitch slider value from [0, 100] to [100, 1000]
+      oscillator.frequency.value = mapRange(pitch, 0, 100, 100, 1000);
+      
+      // Create a gain node to control the volume
+      const gainNode = audioContext.createGain();
+      
+      // Set the gain value based on the volume slider value
+      gainNode.gain.value = volume / 100;
+      
+      // Connect the oscillator to the gain node
+      oscillator.connect(gainNode);
+      
+      // Connect the gain node to the audio output
+      gainNode.connect(audioContext.destination);
+      
+      // Start the oscillator
+      oscillator.start();
+      
+      // Stop the oscillator after a certain duration (e.g., 3 seconds)
+      setTimeout(() => {
+        oscillator.stop();
+      }, 3000);
+    }
+    
+    // Function to update the volume
+    function updateVolume() {
+      const volume = volumeSlider.value;
+      // Add code to update the volume of the sound
+      gainNode.gain.value = volume / 100;
+    }
+    
+    // Function to update the pitch
+    function updatePitch() {
+      const pitch = pitchSlider.value;
+      // Add code to update the pitch of the sound
+      oscillator.frequency.value = mapRange(pitch, 0, 100, 100, 1000);
+    }
+    
+    // Add event listeners to handle button click and slider changes
+    playButton.addEventListener('click', playSound);
+    volumeSlider.addEventListener('input', updateVolume);
+    pitchSlider.addEventListener('input', updatePitch);
+    
+    // Helper function to map a value from one range to another
+    function mapRange(value, inMin, inMax, outMin, outMax) {
+      return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+    }
+  </script>
+</body>
+</html>
