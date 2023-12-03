@@ -10,6 +10,30 @@
       border: 1px solid black;
       margin-left: 20px;
     }
+    
+    .piano {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 20px;
+    }
+    
+    .piano-key {
+      width: 50px;
+      height: 150px;
+      background-color: white;
+      border: 1px solid black;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+    
+    .piano-key.black {
+      background-color: black;
+      width: 30px;
+      height: 100px;
+      margin-left: -10px;
+      margin-right: -10px;
+    }
   </style>
 </head>
 <body>
@@ -33,6 +57,22 @@
   
   <div id="visualizer"></div>
   
+  <div class="piano">
+    <div class="piano-key" data-pitch="261.63"></div>
+    <div class="piano-key black" data-pitch="277.18"></div>
+    <div class="piano-key" data-pitch="293.66"></div>
+    <div class="piano-key black" data-pitch="311.13"></div>
+    <div class="piano-key" data-pitch="329.63"></div>
+    <div class="piano-key" data-pitch="349.23"></div>
+    <div class="piano-key black" data-pitch="369.99"></div>
+    <div class="piano-key" data-pitch="392.00"></div>
+    <div class="piano-key black" data-pitch="415.30"></div>
+    <div class="piano-key" data-pitch="440.00"></div>
+    <div class="piano-key" data-pitch="466.16"></div>
+    <div class="piano-key black" data-pitch="493.88"></div>
+    <div class="piano-key" data-pitch="523.25"></div>
+  </div>
+  
   <script>
     // Add your JavaScript code here
     const playButton = document.getElementById('playButton');
@@ -40,6 +80,7 @@
     const volumeSlider = document.getElementById('volumeSlider');
     const pitchSlider = document.getElementById('pitchSlider');
     const visualizer = document.getElementById('visualizer');
+    const pianoKeys = document.querySelectorAll('.piano-key');
     
     let oscillator;
     let gainNode;
@@ -48,9 +89,8 @@
     let canvasCtx;
     
     // Function to play the sound
-    function playSound() {
+    function playSound(pitch) {
       const volume = volumeSlider.value;
-      const pitch = pitchSlider.value;
       
       // Create an AudioContext
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -61,8 +101,8 @@
       // Set the oscillator type to "sine" for a constant buzz
       oscillator.type = 'sine';
       
-      // Map the pitch slider value from [0, 100] to [100, 1000]
-      oscillator.frequency.value = mapRange(pitch, 0, 350, 100, 1000);
+      // Set the pitch based on the data-pitch attribute of the piano key
+      oscillator.frequency.value = pitch;
       
       // Create a gain node to control the volume
       gainNode = audioContext.createGain();
@@ -76,20 +116,8 @@
       // Connect the gain node to the audio output
       gainNode.connect(audioContext.destination);
       
-      // Create an analyser node to visualize the sound wave
-      analyser = audioContext.createAnalyser();
-      analyser.fftSize = 2048;
-      const bufferLength = analyser.frequencyBinCount;
-      dataArray = new Uint8Array(bufferLength);
-      
-      // Connect the analyser node to the gain node
-      gainNode.connect(analyser);
-      
       // Start the oscillator
       oscillator.start();
-      
-      // Start the visualization
-      visualize();
     }
     
     // Function to stop the sound
@@ -155,7 +183,7 @@
     }
     
     // Add event listeners to handle button click and slider changes
-    playButton.addEventListener('click', playSound);
+    playButton.addEventListener('click', playSound.bind(null, pitchSlider.value));
     stopButton.addEventListener('click', stopSound);
     volumeSlider.addEventListener('input', updateVolume);
     pitchSlider.addEventListener('input', updatePitch);
@@ -169,6 +197,14 @@
     canvasCtx = visualizer.getContext('2d');
     visualizer.width = visualizer.clientWidth;
     visualizer.height = visualizer.clientHeight;
+    
+    // Add event listeners to piano keys
+    pianoKeys.forEach(key => {
+      const pitch = parseFloat(key.dataset.pitch);
+      key.addEventListener('mousedown', playSound.bind(null, pitch));
+      key.addEventListener('mouseup', stopSound);
+      key.addEventListener('mouseleave', stopSound);
+    });
   </script>
 </body>
 </html>
