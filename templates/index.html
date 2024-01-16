@@ -57,30 +57,11 @@
   
   <div id="visualizer"></div>
   
-  <div class="piano">
-    <div class="piano-key" data-pitch="261.63"></div>
-    <div class="piano-key black" data-pitch="277.18"></div>
-    <div class="piano-key" data-pitch="293.66"></div>
-    <div class="piano-key black" data-pitch="311.13"></div>
-    <div class="piano-key" data-pitch="329.63"></div>
-    <div class="piano-key" data-pitch="349.23"></div>
-    <div class="piano-key black" data-pitch="369.99"></div>
-    <div class="piano-key" data-pitch="392.00"></div>
-    <div class="piano-key black" data-pitch="415.30"></div>
-    <div class="piano-key" data-pitch="440.00"></div>
-    <div class="piano-key" data-pitch="466.16"></div>
-    <div class="piano-key black" data-pitch="493.88"></div>
-    <div class="piano-key" data-pitch="523.25"></div>
-  </div>
+
   
   <script>
     // Add your JavaScript code here
-    const playButton = document.getElementById('playButton');
-    const stopButton = document.getElementById('stopButton');
-    const volumeSlider = document.getElementById('volumeSlider');
-    const pitchSlider = document.getElementById('pitchSlider');
-    const visualizer = document.getElementById('visualizer');
-    const pianoKeys = document.querySelectorAll('.piano-key');
+
     
     let oscillator;
     let gainNode;
@@ -131,7 +112,7 @@
     // Function to update the volume
     function updateVolume() {
       const volume = volumeSlider.value;
-      document.getElementById('currentVolume').innerText = volume;
+      currentVolume.innerText = volume;
       // Rest of the code...
       if (gainNode) {
         gainNode.gain.value = volume / 100;
@@ -142,7 +123,7 @@
     function updatePitch() {
       const pitch = pitchSlider.value;
       const frequency = mapRange(pitch, 0, 100, 100, 1000);
-      document.getElementById('currentFrequency').innerText = frequency.toFixed(2);
+      currentFrequency.innerText = frequency.toFixed(2);
       // Rest of the code...
       if (oscillator) {
         oscillator.frequency.value = mapRange(pitch, 0, 100, 100, 1000);
